@@ -17,21 +17,10 @@ impl Point {
     }
 }
 
-
-
 struct Map {
-    map: Vec<Vec<char>>,
     antennas: HashMap<char, HashSet<Point>>,
     max_x: isize,
     max_y: isize,
-}
-
-impl std::ops::Deref for Map {
-    type Target = HashMap<char, HashSet<Point>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.antennas
-    }
 }
 
 fn parse(input: &str) -> Map {
@@ -42,7 +31,7 @@ fn parse(input: &str) -> Map {
     for (x, y, ch) in map.iter().enumerate().flat_map(|(x, line)| line.iter().enumerate().map(move |(y, ch)| (x, y, *ch))).filter(|&(_, _, ch)| ch != '.') {
         antennas.entry(ch).or_default().insert(Point(x as isize, y as isize));
     }
-    Map { map, antennas, max_x, max_y, }
+    Map { antennas, max_x, max_y, }
 }
 
 fn part_1(input: &str) -> u64 {
@@ -99,17 +88,18 @@ fn part_2(input: &str) -> u64 {
 
 pub fn part_2_better(input: &str) -> usize {
     let map = parse(input);
-    map.antennas.values().flat_map(|antennas|
-        antennas.iter().flat_map(|&a| antennas.iter()
-            .filter(move |&b| a != *b)
-            .flat_map(move |&b| {
-                let limit = map.max_x.max(map.max_y);
-                (-limit..=limit).map(move |i| a.add(b.sub(a).scale(i)))
-            })
+    let limit = map.max_x.max(map.max_y);
+    map.antennas.values()
+        .flat_map(|antennas|
+            antennas.iter().flat_map(|&a| antennas.iter()
+                .filter(move |&b| a != *b)
+                .flat_map(move |&b| (-limit..=limit)
+                    .map(move |i| a.add(b.sub(a).scale(i)))
+                )
+            )
         )
-    )
-    .filter(|&p| 0 <= p.0 && p.0 < map.max_x && 0 <= p.1 && p.1 < map.max_y)
-    .collect::<HashSet<_>>().len()
+        .filter(|&p| 0 <= p.0 && p.0 < map.max_x && 0 <= p.1 && p.1 < map.max_y)
+        .collect::<HashSet<_>>().len()
 }
 
 fn main() {
