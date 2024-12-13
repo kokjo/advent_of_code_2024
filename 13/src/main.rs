@@ -79,5 +79,4 @@ fn main() {
     let input = std::fs::read_to_string("input").unwrap();
     println!("part_1 = {}", part_1(&input));
     println!("part_2 = {}", part_2(&input));
-    println!("Hello, world!");
 }
