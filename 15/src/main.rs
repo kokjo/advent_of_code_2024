@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::{HashMap, HashSet}};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum Tile { Wall, Box, Empty, }
@@ -118,10 +118,6 @@ impl Tile2 {
         matches!(self, Tile2::Wall)
     }
 
-    pub fn is_empty(&self) -> bool {
-        matches!(self, Tile2::Empty)
-    }
-
     pub fn other_half(&self, pos: Pos) -> Pos {
         match self {
             Tile2::BoxL => Pos(pos.0 + 1, pos.1),
@@ -184,10 +180,10 @@ fn part_2(input: &str) -> isize {
 
         let mut queue = vec![robot_next];
         while let Some(pos) = queue.pop() {
-            if seen.contains(&pos) {
+            if !seen.insert(pos) {
                 continue;
             }
-            seen.insert(pos);
+
             let tile = *map_next.get(&pos).unwrap();
             if tile.is_wall() {
                 continue 'dir_loop;
@@ -205,9 +201,9 @@ fn part_2(input: &str) -> isize {
                 map_next.insert(pos, Tile2::Empty);
             }
         }
+
         map = map_next;
         robot = robot_next;
-
     }
 
     map.into_iter()
