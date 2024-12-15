@@ -110,14 +110,6 @@ enum Tile2 {
 }
 
 impl Tile2 {
-    pub fn is_box(&self) -> bool {
-        matches!(self, Tile2::BoxL | Tile2::BoxR)
-    }
-
-    pub fn is_wall(&self) -> bool {
-        matches!(self, Tile2::Wall)
-    }
-
     pub fn other_half(&self, pos: Pos) -> Pos {
         match self {
             Tile2::BoxL => Pos(pos.0 + 1, pos.1),
@@ -149,7 +141,7 @@ fn part_2(input: &str) -> isize {
         Tile::Empty => vec![(pos.l(), Tile2::Empty), (pos.r(), Tile2::Empty)],
     }));
 
-    'dir_loop: for dir in moves {
+    'move_loop: for dir in moves {
 
         // for y in (0..11) {
         //     for x in (0..20) {
@@ -180,17 +172,18 @@ fn part_2(input: &str) -> isize {
 
         let mut queue = vec![robot_next];
         while let Some(pos) = queue.pop() {
-            if !seen.insert(pos) {
-                continue;
-            }
-
-            let tile = *map_next.get(&pos).unwrap();
-            if tile.is_wall() {
-                continue 'dir_loop;
-            }
-            if tile.is_box() {
-                queue.push(tile.other_half(pos));
-                queue.push(pos + dir);
+            if seen.insert(pos) {
+                let tile = map_next.get(&pos).unwrap();
+                match tile {
+                    Tile2::Empty => {},
+                    Tile2::BoxL | Tile2::BoxR => {
+                        queue.push(tile.other_half(pos));
+                        queue.push(pos + dir);
+                    },
+                    Tile2::Wall => {
+                        continue 'move_loop;
+                    },
+                }
             }
         }
 
