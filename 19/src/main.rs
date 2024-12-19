@@ -25,20 +25,18 @@ fn count_solutions<'a>(memo: &mut HashMap<&'a str, usize>, desired: &'a str, ava
     return count
 }
 
-fn part_1(input: &str) -> usize {
-    let (available, desired) = parse(input);
-    let mut memo = HashMap::new();
-    desired.iter().filter(|desired| count_solutions(&mut memo, desired, &available) != 0).count()
+fn part_1<'a>(memo: &mut HashMap<&'a str, usize>, available: &[&'a str], desired: &[&'a str]) -> usize {
+    desired.iter().filter(|desired| count_solutions(memo, desired, &available) != 0).count()
 }
 
-fn part_2(input: &str) -> usize {
-    let (available, desired) = parse(input);
-    let mut memo = HashMap::new();
-    desired.iter().map(|desired| count_solutions(&mut memo, desired, &available)).sum()
+fn part_2<'a>(memo: &mut HashMap<&'a str, usize>, available: &[&'a str], desired: &[&'a str]) -> usize {
+    desired.iter().map(|desired| count_solutions(memo, desired, &available)).sum()
 }
 
 fn main() {
     let input = std::fs::read_to_string("input").unwrap();
-    println!("part_1 = {}", part_1(&input));
-    println!("part_2 = {}", part_2(&input));
+    let (available, desired) = parse(&input);
+    let mut memo = HashMap::new();
+    println!("part_1 = {}", part_1(&mut memo, &available, &desired));
+    println!("part_2 = {}", part_2(&mut memo, &available, &desired));
 }
