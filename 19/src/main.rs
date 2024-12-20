@@ -15,14 +15,12 @@ fn count_solutions<'a>(memo: &mut HashMap<&'a str, usize>, desired: &'a str, ava
     if let Some(&result) = memo.get(desired) {
         return result;
     }
-    let mut count = 0;
-    for towel in available {
-        if let Some(prefix) = desired.strip_suffix(towel) {
-            count += count_solutions(memo, prefix, available);
-        }
-    }
-    memo.insert(desired, count);
-    return count
+    let solutions = available.iter()
+        .filter_map(|suffix| desired.strip_suffix(suffix))
+        .map(|prefix| count_solutions(memo, prefix, available))
+        .sum();
+    memo.insert(desired, solutions);
+    return solutions
 }
 
 fn part_1<'a>(memo: &mut HashMap<&'a str, usize>, available: &[&'a str], desired: &[&'a str]) -> usize {
