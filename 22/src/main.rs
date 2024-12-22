@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn evolve(mut secret: u64) -> u64 {
     secret ^= (secret << 6) & 0xffffff;
@@ -28,36 +28,26 @@ fn diff(xs: &[u64]) -> Vec<i64> {
 
 fn part_2(input: &str) -> u64 {
     let numbers = input.trim().lines().map(|num| num.parse::<u64>().unwrap());
-    let sequences: Vec<Vec<u64>> = numbers.map(|mut secret| {
-        let mut sequence = vec![];
+
+    let mut change_score = HashMap::<Vec<i64>, u64>::new();
+    for mut secret in numbers {
+        let mut sequence = Vec::new();
         for _ in 0..2000 {
             sequence.push(secret % 10);
             secret = evolve(secret);
         }
-        sequence
-    }).collect();
 
-    let possible_changes = sequences.iter().flat_map(|sequence| sequence.windows(5).map(diff)).collect::<HashSet<Vec<i64>>>();
-    dbg!(possible_changes.len());
-
-    let mut most_bananas = 0;
-    for (i, change) in possible_changes.iter().enumerate() {
-        let mut bananas = 0;
-        for sequence in sequences.iter() {
-            for window in sequence.windows(5) {
-                if &diff(window) == change {
-                    bananas += window.last().unwrap();
-                    break;
-                }
+        let mut seen = HashSet::<Vec<i64>>::new();
+        for window in sequence.windows(5) {
+            let diff = diff(window);
+            if seen.insert(diff.clone()) {
+                *change_score.entry(diff).or_default() += window.last().unwrap();
             }
-        }
-        if bananas > most_bananas  {
-            most_bananas = bananas;
-            dbg!(i, most_bananas);
         }
     }
 
-    most_bananas
+    change_score.into_iter().map(|(_, score)| score).max().unwrap()
+
 }
 
 fn main() {
