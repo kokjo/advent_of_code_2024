@@ -1,4 +1,7 @@
-use std::{cmp::Reverse, collections::{BinaryHeap, HashMap, HashSet}};
+use std::{
+    cmp::Reverse,
+    collections::{BinaryHeap, HashMap, HashSet},
+};
 
 type Pos = (isize, isize);
 
@@ -72,15 +75,19 @@ pub fn solve(map: &HashSet<Pos>, start: Pos, end: Pos, cheat_length: isize) -> u
             }
         }
 
-        cur_pos = score_map.iter()
-            .filter(|&(next_pos, next_score)| next_score + 1 == cur_score && dist(next_pos, &cur_pos) == 1)
-            .map(|(&pos, _)| pos)
-            .next()
-            .unwrap();
+        cur_pos = [
+            (cur_pos.0 + 1, cur_pos.1),
+            (cur_pos.0 - 1, cur_pos.1),
+            (cur_pos.0, cur_pos.1 + 1),
+            (cur_pos.0, cur_pos.1 - 1),
+        ]
+        .into_iter()
+        .filter(|next| score_map.get(next) == Some(&(cur_score - 1)))
+        .next()
+        .unwrap();
     }
 
     count
-
 }
 
 fn part_1(map: &HashSet<Pos>, start: Pos, end: Pos) -> usize {
