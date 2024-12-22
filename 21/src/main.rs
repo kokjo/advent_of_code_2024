@@ -1,4 +1,4 @@
-use std::{collections::BinaryHeap, ops::Deref, path::Display};
+use std::{collections::{BinaryHeap, HashMap}, ops::Deref};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Pos(isize, isize);
@@ -230,33 +230,40 @@ fn route_keypad<KP: KeyPad>(a: KP, b: KP) -> Vec<Path<DirKeyPad>> {
     routes
 }
 
-fn solve_nested_keypad<KP: KeyPad>(a: KP, b: KP, layers: usize) -> Path<DirKeyPad> {
+fn solve_nested_keypad<KP: KeyPad>(memo: &mut HashMap<(DirKeyPad, DirKeyPad, usize), usize>, a: KP, b: KP, layers: usize) -> usize {
     if layers == 0 {
-        route_keypad(a, b).into_iter().next().unwrap()
+        route_keypad(a, b).into_iter().next().unwrap().len()
     } else {
         let mut solutions = vec![];
         let mut cur = DirKeyPad::default();
         for path in route_keypad(a, b) {
-            let mut solution = Path(vec![]);
+            let mut solution = 0;
             for &next in path.iter() {
-                solution.extend(solve_nested_keypad(cur, next, layers-1).deref());
+                let solution_part = if let Some(&size) = memo.get(&(cur, next, layers - 1)) {
+                    size
+                } else {
+                    let size = solve_nested_keypad(memo, cur, next, layers-1);
+                    memo.insert((cur, next, layers-1), size);
+                    size
+                };
+                solution += solution_part;
                 cur = next;
             }
             solutions.push(solution);
         }
-        solutions.sort_by_key(|path| (path.len() as isize));
+        solutions.sort();
         solutions.into_iter().next().unwrap()
     }
 }
 
-fn solve_keycode(keycode: Vec<NumKeyPad>, layers: usize) -> Path<DirKeyPad> {
+fn solve_keycode(keycode: Vec<NumKeyPad>, layers: usize) -> usize {
     let mut cur = NumKeyPad::default();
-    let mut solution = Path(vec![]);
+    let mut solution = 0;
+    let mut memo = HashMap::new();
     for &next in keycode.iter() {
-        solution.extend(solve_nested_keypad(cur, next, layers).deref());
+        solution += solve_nested_keypad(&mut memo, cur, next, layers);
         cur = next;
     }
-    println!("{}: {}", Path(keycode), solution);
 
     solution
 }
@@ -265,7 +272,7 @@ fn part_1(input: &str) -> usize {
     let mut sum = 0;
     for line in input.trim().lines() {
         let keycode = line.chars().map(NumKeyPad::try_from).collect::<Result<Vec<NumKeyPad>, ()>>().unwrap();
-        sum += solve_keycode(keycode, 2).len() * &line[0..3].parse::<usize>().unwrap();
+        sum += solve_keycode(keycode, 2) * &line[0..3].parse::<usize>().unwrap();
     }
     sum
 }
@@ -274,7 +281,7 @@ fn part_2(input: &str) -> usize {
     let mut sum = 0;
     for line in input.trim().lines() {
         let keycode = line.chars().map(NumKeyPad::try_from).collect::<Result<Vec<NumKeyPad>, ()>>().unwrap();
-        sum += solve_keycode(keycode, 25).len() * &line[0..3].parse::<usize>().unwrap();
+        sum += solve_keycode(keycode, 25) * &line[0..3].parse::<usize>().unwrap();
     }
     sum
 }
