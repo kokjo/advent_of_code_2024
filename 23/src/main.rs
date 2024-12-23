@@ -21,6 +21,15 @@ fn parse(input: &str) -> HashSet<UnorderedPair> {
         .collect()
 }
 
+fn is_clique(pairs: &HashSet<UnorderedPair>, clique: &[&str]) -> bool {
+    if let Some((&first, rest)) = clique.split_first() {
+        rest.iter().all(|&other| pairs.contains(&UnorderedPair::new(first, other)))
+            && is_clique(pairs, rest)
+    } else {
+        true
+    }
+}
+
 fn part_1(pairs: &HashSet<UnorderedPair>) -> usize {
     let nodes: HashSet<&str> = pairs.iter().flat_map(|pair| [pair.0, pair.1]).collect();
 
@@ -30,15 +39,9 @@ fn part_1(pairs: &HashSet<UnorderedPair>) -> usize {
             continue;
         }
         for &b in nodes.iter() {
-            if a == b {
-                continue;
-            }
             for &c in nodes.iter() {
-                if c == a || c == b {
-                    continue;
-                }
-                if pairs.contains(&UnorderedPair::new(a, b)) && pairs.contains(&UnorderedPair::new(b, c)) && pairs.contains(&UnorderedPair::new(c, a)) {
-                    let mut triple = [a, b, c];
+                let mut triple = [a, b, c];
+                if is_clique(pairs, &triple) {
                     triple.sort();
                     sets_of_3.insert(triple);
                 }
@@ -47,15 +50,6 @@ fn part_1(pairs: &HashSet<UnorderedPair>) -> usize {
     }
 
     sets_of_3.len()
-}
-
-fn is_clique(pairs: &HashSet<UnorderedPair>, clique: &[&str]) -> bool {
-    if let Some((&first, rest)) = clique.split_first() {
-        rest.iter().all(|&other| pairs.contains(&UnorderedPair::new(first, other)))
-            && is_clique(pairs, rest)
-    } else {
-        true
-    }
 }
 
 fn build_largest_clique<'a>(pairs: &HashSet<UnorderedPair<'a>>, mut clique: Vec<&'a str>, adjs: &[&'a str]) -> Vec<&'a str> {
